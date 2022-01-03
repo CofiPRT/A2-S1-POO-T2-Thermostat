@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"timerecord","l":"DataRecord"},{"p":"timerecord","l":"Entry"},{"p":"thermostat","l":"House"},{"p":"thermostat","l":"MainClass"},{"p":"thermostat","l":"Room"},{"p":"timerecord","l":"TimeInterval"}]

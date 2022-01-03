@@ -1,0 +1,145 @@
+---------------------------------------
+--- Programare Orientata pe Obiecte ---
+---- Tema 2 - Termostat Inteligent ----
+---------------------------------------
+
+Cuprinsul:
+	1. Pachetul 'timerecord'				Linia  21
+	2. Pachetul 'thermostat'				Linia  64
+	3. Alte detalii							Linia 139
+
+** IMPORTANT **
+O precizare de forma 'Acest tip de obiect este comparat dupa <field>' se refera
+la suprascrierile metodelor equals (Object) si compareTo (interfata Comparable)
+pentru a compara doar ce este important in cadrul obiectului (<field>).
+Aceasta modificare serveste la crearea unui set sortat (ConcurrentSkipListSet)
+de aceste obiecte dupa propria preferinta.
+	
+=== timerecord ===
+------ Entry
+		- O pereche <timestamp, value> ce reprezinta o inregistrare a unei
+		valori (precum temperatura sau umiditate) la un anumit timp (timestamp)
+		- Acest tip de obiect este comparat numeric dupa campul 'value'.
+
+------ TimeInterval
+		- Un obiect de acest tip reprezinta un interval de timp (in
+		implementare, de 3600 de secunde). El este definit de campul
+		'intervalStart', ce semnifica primul timestamp continut de acest
+		interval.
+		- Un astfel de obiect retine inregistrari de valori la un anumit timp
+		(Entry). Acestea sunt retinute, fara duplicate, in ordine crescatoare.
+		Astfel, se poate obtine cu usurinta valoarea minima, respectiv valoarea
+		maxima din acest interval.
+		- Acest tip de obiect este comparat numeric dupa campul 'intervalStart'.
+
+------ DataRecord
+		- Un obiect de acest tip va reprezenta o agenda de inregistrari ale
+		temperaturii si umiditatii asociate unui dispozitiv plasat intr-o
+		camera.
+		- El retine campul 'refTimestamp' ce semnifica timpul de referinta
+		dupa care se vor realiza operatiile. Totodata sunt definite constante
+		precum 'timeInterval = 3600' (ce reprezinta lungimea unui interval de
+		timp, in acest caz 3600 de secunde) si 'maxIntervals = 24' (ce
+		reprezinta numarul maxim de intervale care pot fi inregistrare,
+		acest caz doar ultimele 24 de ore).
+		- Adaugarea unei inregistrari se face prin apelarea metodei aferente
+		(addTemp pentru temperatura si addHum pentru umiditate). Aceasta
+		se realizeaza prin gasirea (sau crearea) intervalului de timp aferent
+		timestamp-ului valorii, dupa care se adauga la acesta inregistrarea
+		antepusa.
+		- Printarea temperaturilor cuprinse intre 2 timestamp-uri se face
+		parcurgand in ordine inversa (de la cel mai recent interval) fiecare
+		interval, verificandu-se ca acesta sa se incadreze intre cele 2
+		timestamp-uri. Pentru fiecare interval ce verifica aceasta conditie,
+		se afiseaza valorile temperaturilor in ordine crescatoare.
+		- Intrucat intervalele de timp sunt sortate crescator, ultimul
+		interval inregistrat va fi intotdeauna cel mai recent, astfel se pot
+		obtine cu usurinta valorile ce ne intereseaza (cea mai mica temperatura
+		din ultima ora inregistrata, respectiv cea mai mare umiditate din
+		ultima ora inregistrata).
+			
+=== thermostat ===
+------ Room
+		- Un obiect de acest tip reprezinta o camera, careia i se asociaza un
+		nume, un dispozitiv si o suprafata. Fiecare camera retine o agenda
+		DataRecord ce reprezinta valorile de temperatura si umiditate
+		inregistrate de catre dispozitivul ei.
+		- Metodele de adaugare a inregistrarilor si de afisare a acestora sunt
+		"pasate" agendei DataRecord.
+		- Acest tip de obiect este comparat lexicografic dupa campul 'name'.
+		
+------ House
+		- Un obiect de acest tip reprezinta o casa, careia i se asociaza o
+		temperatura globala dorita, un nivel de umiditate globala dorit si
+		un timestamp de referinta dupa care se vor realiza calculele
+		inregistrarilor de temperatura si umiditate.
+		- Se retine un set de camere asupra carora se pot realiza operatiile
+		aferente cerintei:
+			observe:
+				- Se adauga o inregistrare de temperatura pentru camera dorita
+
+			observeh:
+				- Se adauga o inregistrare de umiditate pentru camera dorita
+
+			setTemp:
+				- Corespondent: "TEMPERATURE"
+				- Se seteaza temperatura globala dorita la o noua valoare
+
+			list:
+				- Se apeleaza asupra agendei camerei dorite metoda ce afiseaza
+				conform cerintei temperaturile inregistrate
+
+			triggerHeat:
+				- Se itereaza prin fiecare camera, calculand conform cerintei
+				mediile ponderate pentru temperatura si umiditate (pentru
+				fiecare medie, se iau in calcul doar camerele in care exista
+				cel putin o inregistrare pentru acel tip de valoare)
+				- Conform cerintei, se decide pornirea centralei. In cazul
+				in care in input nu a fost introdusa nivelul de umiditate
+				dorit, nu se ia in considerare umiditatea pentru aceasta
+				decizie.
+				
+------ MainClass
+		- Clasa ce contine metoda 'main'
+		- Serveste mai multe functionalitati
+		IO:
+			Un Scanner pentru citirea din fisier 'inputStream' si unul pentru
+			lucrul printr-o linie 'inputLine'
+			
+			Redirectionarea output-ului se face in fisierul de output prin
+			System.setOut asupra stream-ului aferent fisierului.
+			Se face un backup al consolei (out-ul initial) in cazul in care se
+			doreste reutilizarea ei la sfarsitul programului.
+			
+		Obiecte principale:
+			Programul va lucra asupra unui singur obiect de tip 'House'
+			
+		Metoda setupIO:
+			Face modificarile necesare pentru input si output pentru a se
+			putea lucra cu aceste stream-uri
+			
+		Metoda restoreIO:
+			Restaureaza modificarile facute de 'setupIO'
+			
+		Metoda registerHouse:
+			> Se citesc constantele necesare aflate pe prima linie din input,
+			testandu-se numarul acestora pentru a salva eventual si constanta
+			ce defineste nivelul de umiditate dorit.
+			> Pentru fiecare camera din input, se creeaza un obiect asociat
+			informatiilor primite si se adauga casei
+			
+		Metoda executeCommands:
+			> Pana la sfarsitul fisierului de input, se citeste si se executa
+			fiecare comanda, prin apelarea asupra obiectului de tip 'House' a
+			unei metode aferente comenzii.
+
+=== Alte detalii ===
+	- Pentru a salva camerele, intervalele de timp si inregistrarile de
+	temperatura/umiditate am ales sa folosesc colectia ConcurrentSkipListSet
+	alaturi de implementarea aferenta a metodelor equals (Object) si
+	compareTo (interfata Comparable) pentru gestionarea unui set (de obiecte
+	"unice") sortat dupa propria preferinta.
+	- Pentru inregistrarile de temperatura/umiditate am ales implementarea
+	ConcurrentSkipListSet<Entry> pentru a avea mai mult control asupra
+	continutului fiecarei inregistrari decat cel oferit de o implementare
+	ConcurrentSkipListMap<Long, Double> (sau <Double, Long>).
